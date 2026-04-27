@@ -6,7 +6,10 @@
 const fs = require("node:fs");
 const path = require("node:path");
 const { dialog } = require("electron");
-const { terminalDataToPlainText } = require("./terminalLogSanitizer.cjs");
+const {
+  terminalDataToHtmlContent,
+  terminalDataToPlainText,
+} = require("./terminalLogSanitizer.cjs");
 
 /**
  * Get current Date to a local ISO-like string (YYYY-MM-DDTHH-MM-SS)
@@ -39,6 +42,10 @@ function escapeHtml(str) {
 
 function terminalPlainTextToHtml(plainText, hostLabel, timestamp) {
   const htmlContent = escapeHtml(plainText || "");
+  return wrapTerminalHtmlContent(htmlContent, hostLabel, timestamp);
+}
+
+function wrapTerminalHtmlContent(htmlContent, hostLabel, timestamp) {
   const dateStr = new Date(timestamp).toLocaleString();
   const safeHostLabel = escapeHtml(hostLabel || "Unknown");
   const safeDateStr = escapeHtml(dateStr);
@@ -72,16 +79,17 @@ function terminalPlainTextToHtml(plainText, hostLabel, timestamp) {
     Host: ${safeHostLabel}<br>
     Date: ${safeDateStr}
   </div>
-  <div class="content">${htmlContent}</div>
+  <div class="content">${htmlContent || ""}</div>
 </body>
 </html>`;
 }
 
 /**
- * Convert terminal data to HTML after applying terminal text controls.
+ * Convert terminal data to HTML after applying terminal text controls while
+ * preserving SGR styles such as color, bold, italic, and underline.
  */
 function terminalDataToHtml(terminalData, hostLabel, timestamp) {
-  return terminalPlainTextToHtml(terminalDataToPlainText(terminalData), hostLabel, timestamp);
+  return wrapTerminalHtmlContent(terminalDataToHtmlContent(terminalData), hostLabel, timestamp);
 }
 
 /**
@@ -235,4 +243,5 @@ module.exports = {
   toLocalISOString,
   terminalDataToHtml,
   terminalPlainTextToHtml,
+  wrapTerminalHtmlContent,
 };

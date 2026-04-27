@@ -8,7 +8,7 @@ const fs = require("node:fs");
 const path = require("node:path");
 const {
   toLocalISOString,
-  terminalPlainTextToHtml,
+  wrapTerminalHtmlContent,
 } = require("./sessionLogsBridge.cjs");
 const { createTerminalTextRenderer } = require("./terminalLogSanitizer.cjs");
 
@@ -125,10 +125,9 @@ function flushBuffer(entry) {
 }
 
 function renderSnapshotContent(entry) {
-  const text = entry.renderer.toString();
   return entry.isHtml
-    ? terminalPlainTextToHtml(text, entry.hostLabel, entry.startTime)
-    : text;
+    ? wrapTerminalHtmlContent(entry.renderer.toHtmlContent(), entry.hostLabel, entry.startTime)
+    : entry.renderer.toString();
 }
 
 function scheduleSnapshot(entry) {
